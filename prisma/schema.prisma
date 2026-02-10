@@ -1,0 +1,179 @@
+// 1. CONFIGURATION
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 2. ENUMS
+enum Role {
+  USER
+  ADMIN
+}
+
+enum MessageStatus {
+  UNREAD
+  READ
+  ARCHIVED
+}
+
+// ==========================================
+// 4.2.1 - USER MODEL
+// ==========================================
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  password      String    // Hashed password
+  role          Role      @default(USER)
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relasi: User bisa menulis Blog (Post)
+  posts         Post[]
+}
+
+// ==========================================
+// 4.2.2 - COMPANY INFO MODEL
+// (Menyimpan data global: Alamat, No HP, Sosmed)
+// ==========================================
+model CompanyInfo {
+  id          String   @id @default(cuid())
+  name        String   // Nama Perusahaan
+  description String   @db.Text
+  history     String?  @db.LongText  // Untuk cerita panjang
+  aboutImage  String?  // Untuk URL foto kantor
+  address     String   @db.Text
+  email       String
+  phone       String
+  whatsapp    String
+  mapEmbedUrl String?  @db.Text // Iframe Google Maps
+  socials     Json?    // Simpan link sosmed: { instagram: "...", linkedin: "..." }
+  
+  updatedAt   DateTime @updatedAt
+}
+
+// ==========================================
+// 4.2.3 - SERVICE MODEL
+// ==========================================
+model Service {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  description String   @db.Text // Deskripsi singkat
+  content     String?  @db.LongText // Konten lengkap (HTML/Rich Text)
+  icon        String   // Nama icon (misal: "Globe")
+  features    Json?    // Array: ["Fitur 1", "Fitur 2"]
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==========================================
+// 4.2.4 - PORTFOLIO MODEL (Ganti nama Project jadi Portfolio)
+// ==========================================
+model Portfolio {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  client      String?
+  category    String   // Web, Mobile, IoT
+  techStack   Json?    // Array: ["Next.js", "Laravel"]
+  
+  description String   @db.Text
+  challenge   String?  @db.Text
+  solution    String?  @db.Text
+  result      String?  @db.Text
+  
+  thumbnail   String?
+  gallery     Json?    // Array gambar: ["url1.jpg", "url2.jpg"]
+  
+  featured    Boolean  @default(false)
+  year        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==========================================
+// 4.2.5 - TEAM MEMBER MODEL
+// ==========================================
+model TeamMember {
+  id          String   @id @default(cuid())
+  name        String
+  position    String   // CEO, CTO, dll
+  bio         String?  @db.Text
+  photo       String?
+  socials     Json?    // { linkedin: "...", github: "..." }
+  order       Int      @default(0) // Untuk urutan tampilan
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ==========================================
+// 4.2.6 - TESTIMONIAL MODEL
+// ==========================================
+model Testimonial {
+  id          String   @id @default(cuid())
+  client      String   // Nama Klien
+  company     String?  // Asal Perusahaan
+  content     String   @db.Text
+  rating      Int      @default(5)
+  avatar      String?  // Foto profil klien
+  isShow      Boolean  @default(true) // Tampilkan atau sembunyikan
+  
+  createdAt   DateTime @default(now())
+}
+
+// ==========================================
+// 4.2.7 - CONTACT MESSAGE MODEL
+// ==========================================
+model ContactMessage {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  company   String?
+  message   String        @db.Text
+  status    MessageStatus @default(UNREAD)
+  
+  createdAt DateTime      @default(now())
+}
+
+// ==========================================
+// 4.2.8 - MEDIA MODEL (File Manager)
+// ==========================================
+model Media {
+  id        String   @id @default(cuid())
+  filename  String
+  url       String   // Path file public
+  type      String   // mime type: image/png, application/pdf
+  size      Int      // ukuran dalam byte
+  
+  createdAt DateTime @default(now())
+}
+
+// ==========================================
+// EXTRA: POST MODEL (Untuk Blog/Berita)
+// (Tetap kita butuhkan karena halaman About ada Blog)
+// ==========================================
+model Post {
+  id          String   @id @default(cuid())
+  title       String
+  slug        String   @unique
+  excerpt     String?  @db.Text
+  content     String   @db.LongText
+  coverImage  String?
+  category    String
+  published   Boolean  @default(false)
+  
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id])
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
