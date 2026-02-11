@@ -47,7 +47,7 @@ export default function ServiceForm({ initialData }: ServiceFormProps) {
   const removeFeature = (index: number) => {
     setFormData((prev) => ({
       ...prev,
-      features: prev.features.filter((_, i) => i !== index),
+      features: prev.features.filter((_: any, i: number) => i !== index),
     }));
   };
 
